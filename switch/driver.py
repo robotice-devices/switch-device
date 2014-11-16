@@ -1,75 +1,36 @@
 #!/srv/robotice/bin/python
 
-import argparse
-
-p = argparse.ArgumentParser(description="Parse command parameters.")
-
-p.add_argument("-p", "--port")
-p.add_argument("-m", "--mode")
-p.add_argument("-r", "--reverse")
-
-opts = p.parse_args()
-
-device = None
+import sys
+from oslo.config import cfg
+from oslo.config import types
 
 try:
-    import Adafruit_BBIO.GPIO as GPIO
-    device = 'bbb'
+    import sensor
+    import actuator
 except Exception, e:
-    pass
+    raise e
 
-try:
-    import RPi.GPIO as GPIO
-    device = 'rpi'
-except Exception, e:
-    pass
+common_opts = [
+    cfg.StrOpt('port',
+               short='p',
+               default='P9_40',
+               help='Port for action.'),
+    cfg.Opt('mode',
+            short='m',
+            default="get",
+            help='get or set value on the port.'),
+    cfg.Opt('value',
+            short='v',
+            default=0,
+            help='for set method mus be provided value.'),
+    cfg.Opt('name',
+            short='n',
+            default="Sensor",
+            help='Device name')
+]
 
-if device == None:
-    print "Missing GPIO library"
-    exit(0)
+CONF = cfg.CONF
+CONF.register_cli_opts(common_opts)
+CONF(sys.argv[1:])
 
-if opts.mode == 'on':
-    mode = True
-    mode_data = '1'
-else:
-    mode = False
-    mode_data = '0'
-
-if opts.reverse == 'on':
-    reverse = True
-else:
-    reverse = False
-
-if opts.port.lower().startswith('bmc'):
-  bmc = True
-  port = opts.port.lower().replace('bmc', '')
-else:
-  bmc = False
-  port = opts.port
-try:
-    port = int(port)
-except Exception, e:
-    pass
-
-if reverse:
-    if mode:
-        mode = False
-    else:
-        mode = True
-
-if device == 'rpi':
-    if bmc:
-        GPIO.setmode(GPIO.BCM)
-    else:
-        GPIO.setmode(GPIO.BOARD)
-
-GPIO.setup(port, GPIO.OUT)
-
-if mode:
-    GPIO.output(port, GPIO.HIGH)
-else:
-    GPIO.output(port, GPIO.LOW)
-
-print "Setting relay at port %s to mode %s, reverse logic: %s" % (port, mode_data, reverse)
-
-exit(0)
+print(sensor.get_data(CONF))
