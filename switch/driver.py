@@ -6,7 +6,6 @@ from oslo.config import types
 
 try:
     import sensor
-    import actuator
 except Exception, e:
     raise e
 
@@ -15,17 +14,9 @@ common_opts = [
                short='p',
                default='P9_40',
                help='Port for action.'),
-    cfg.Opt('mode',
-            short='m',
-            default="get",
-            help='get or set value on the port.'),
-    cfg.Opt('value',
-            short='v',
-            default=0,
-            help='for set method mus be provided value.'),
     cfg.Opt('name',
             short='n',
-            default="Sensor",
+            default="switch",
             help='Device name')
 ]
 
